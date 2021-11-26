@@ -1,0 +1,18 @@
+services:
+  server:
+    image: php:alpine
+    volumes:
+      - ./server:/home/root
+    working_dir: /home/root
+    ports:
+      - 8080:8080
+    command: "php -S 0.0.0.0:8080"
+
+  client:
+    build: ./client
+    volumes:
+      - ./client:/home/root
+    working_dir: /home/root
+    ports:
+      - 80:80
+      - 443:443

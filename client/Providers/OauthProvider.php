@@ -40,29 +40,19 @@ abstract class OauthProvider
             "client_secret" => $this->client_secret,
             "redirect_uri" => $this->redirect_uri
         ];
-        /* $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $this->access_token_url . "?" . http_build_query($params));
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($params));
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($curl); */
-
-        $postdata = http_build_query($params);
-        if ($this->method == 'POST') {
-            $opts = array(
-                'http' => [
-                    'method'  => 'POST',
-                    'header'  => 'Content-Type: application/x-www-form-urlencoded',
-                    'content' => $postdata
-                ]
-            );
-            $context  = stream_context_create($opts);
-            $response = @file_get_contents($this->access_token_url, false, $context);    
+        $curl = curl_init();
+        if (isset($this->method) && $this->method == 'GET') {
+            curl_setopt($curl, CURLOPT_URL, $this->access_token_url . "?" . http_build_query($params));
         } else {
-            $response = file_get_contents($this->access_token_url . "?" . http_build_query($params));
+            curl_setopt($curl, CURLOPT_URL, $this->access_token_url);
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($params));
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
         }
-        if (!$response) return false;
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($curl);
+
+        if (!$response) throw new Exception("Erreur lors de l'obtention du token");
 
         return json_decode($response, true)["access_token"];
     }
@@ -77,6 +67,7 @@ abstract class OauthProvider
             ]
         ]);
         $result = file_get_contents($this->user_endpoint, false, $context);
+        if (!$result) throw new Exception("Erreur lors de l'obtention de l'utilisateur");
         return json_decode($result, true);
     }
 }

@@ -7,6 +7,9 @@ require('Providers/CustomProvider.php');
 require('Providers/DiscordProvider.php');
 require('Providers/FacebookProvider.php');
 require('Providers/GoogleProvider.php');
+require('Providers/GithubProvider.php');
+
+
 
 function login()
 {
@@ -16,6 +19,16 @@ function login()
     if ($_SERVER["REQUEST_METHOD"] === "GET") {
 
         $_SESSION['state'] = rand();
+
+        // Github Auth Link
+        $github = new GithubProvider([
+            'client_id' => 'bf4252fc4f814941446f',
+            'redirect_uri' => 'http://localhost:80/redirect_githubsucess',
+            'scope' => 'user',
+            'state' => $_SESSION['state']
+        ]);
+        echo $github->generateAuthLink();
+
 
         // ServOAuth Auth Link
         $custom = new CustomProvider([
@@ -113,6 +126,14 @@ try {
                 "redirect_uri" => "https://localhost/redirect_google",
             ]));
             break;
+
+        case '/redirect_github':
+            handleSuccess(new GithubProvider([
+                "client_id" => "bf4252fc4f814941446f",
+                "client_secret" => "060d1436ef47148282fa5f7d8f92a483b426c3bc",
+                "redirect_uri" => "http://localhost/redirect_githubsucess",
+            ]));
+            break;
         default:
             throw new \RuntimeException();
             break;
@@ -124,3 +145,5 @@ try {
     http_response_code(500);
     echo $e->getMessage();
 }
+
+
